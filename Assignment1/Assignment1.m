@@ -2,6 +2,8 @@
 
 image = imread("data/mosaic/crayons_mosaic.bmp");
 
+% size of the image is 600*480. therefore, repeat 240 time along the
+% vertical axis and 300 times for horizontal axis
 red_mask = cast(repmat([1 0;0 0], [240 300]), 'uint8');
 green_mask = cast(repmat([0 1;1 0], [240 300]), 'uint8');
 blue_mask = cast(repmat([0 0;0 1], [240 300]), 'uint8');
@@ -21,10 +23,12 @@ imshow(blue_channel)
 title("Blue channel")
 
 %% Task 2
+% the reason for the filter design is described on the report.
 red_filter = [1/4 1/2 1/4; 1/2 1 1/2; 1/4 1/2 1/4];
 green_filter = [0 1/4 0; 1/4 1 1/4; 0 1/4 0];
 blue_filter = red_filter;
 
+% apply filter
 red = imfilter(red_channel, red_filter);
 green = imfilter(green_channel, green_filter);
 blue = imfilter(blue_channel, blue_filter);
@@ -40,6 +44,7 @@ subplot(1, 3, 2)
 imshow(original_image)
 title("Original image")
 
+% find error
 error = original_image - recovered_image;
 error_per_pixel = abs(original_image(:,:,1)-recovered_image(:,:,1))+...
     abs(original_image(:,:,2)-recovered_image(:,:,2))+...
@@ -55,6 +60,7 @@ images = ["data/data/00125v.jpg", "data/data/00149v.jpg", "data/data/00153v.jpg"
 figure(3)
 for i=1:size(images,2);
     image = imread(images(i));
+    % split the image into three parts
     image_blue = image(1:fix(size(image, 1)/3), :);
     subplot(size(images, 2), 4, (i-1)*4+1)
     imshow(image_blue)
@@ -68,18 +74,21 @@ for i=1:size(images,2);
     imshow(image_red)
     title("Red channel")
 
+    % find offset between red channel and green channel
     image_rg = normxcorr2(image_red(10:end-10,10:end-10), image_green(10:end-10,10:end-10));
     [ypeak, xpeak] = find(image_rg==max(image_rg(:)));
     yoffset = ypeak-size(image_red(10:end-10,10:end-10),1);
     xoffset = xpeak-size(image_red(10:end-10,10:end-10),2);
     image_red_offed = imtranslate(image_red, [xoffset, yoffset]);
 
+    % find offset between blue channel and green channel
     image_bg = normxcorr2(image_blue(10:end-10,10:end-10), image_green(10:end-10,10:end-10));
     [ypeak, xpeak] = find(image_bg==max(image_bg(:)));
     yoffset = ypeak-size(image_blue(10:end-10,10:end-10),1);
     xoffset = xpeak-size(image_blue(10:end-10,10:end-10),2);
     image_blue_offed = imtranslate(image_blue, [xoffset, yoffset]);
 
+    % combine the image
     image_combined = cat(3, image_red_offed, image_green, image_blue_offed);
     subplot(size(images, 2), 4, (i-1)*4+4)
     imshow(image_combined)
